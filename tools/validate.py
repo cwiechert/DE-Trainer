@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parent.parent
 QDIR = ROOT / "web" / "data" / "questions"
 VALID_DIFF = {"basico", "intermedio", "avanzado"}
 VALID_TRACK = {"general", "databricks"}
+VALID_SOURCE = {"databricks", "fundamentals", "ddia"}
 
 
 def strip_to_json(text):
@@ -160,6 +161,8 @@ def main():
             errors.append(f"{qid}: tema desconocido {q.get('topic')}")
         if q.get("track") not in VALID_TRACK:
             errors.append(f"{qid}: track inválido {q.get('track')}")
+        if q.get("source") not in VALID_SOURCE:
+            errors.append(f"{qid}: source inválido {q.get('source')}")
         if q.get("difficulty") not in VALID_DIFF:
             errors.append(f"{qid}: dificultad inválida {q.get('difficulty')}")
         if not q.get("explanation"):
@@ -196,17 +199,19 @@ def main():
         else:
             errors.append(f"{qid}: type inválido {t}")
 
-    by_topic, by_track, by_diff, by_type = {}, {}, {}, {}
+    by_topic, by_track, by_diff, by_type, by_source = {}, {}, {}, {}, {}
     for q in questions:
         by_topic[q.get("topic")] = by_topic.get(q.get("topic"), 0) + 1
         by_track[q.get("track")] = by_track.get(q.get("track"), 0) + 1
         by_diff[q.get("difficulty")] = by_diff.get(q.get("difficulty"), 0) + 1
         by_type[q.get("type")] = by_type.get(q.get("type"), 0) + 1
+        by_source[q.get("source")] = by_source.get(q.get("source"), 0) + 1
 
     print(f"Archivos: {', '.join(f'{k}={v}' for k, v in per_file.items())}")
     print(f"Total preguntas: {len(questions)}")
     print(f"Temas declarados: {len(topics)} | con preguntas: {len(by_topic)}")
     print("Por enfoque:", by_track)
+    print("Por fuente:", by_source)
     print("Por formato:", by_type)
     print("Por dificultad:", by_diff)
     print("Por tema:", json.dumps(by_topic, ensure_ascii=False))

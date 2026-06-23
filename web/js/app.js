@@ -14,11 +14,13 @@
 
 const TOPICS = window.TOPICS || {};
 
-const TRACKS = [
-  { key: "databricks", label: "Databricks" },
-  { key: "general", label: "DE general" },
+// Fuentes (libros / documentación) sobre las que se pregunta.
+const SOURCES = [
+  { key: "databricks", label: "Databricks", short: "Databricks" },
+  { key: "fundamentals", label: "Fundamentals of Data Engineering", short: "Fundamentals" },
+  { key: "ddia", label: "Designing Data-Intensive Applications", short: "DDIA" },
 ];
-const TRACK_LABELS = Object.fromEntries(TRACKS.map((t) => [t.key, t.label]));
+const SOURCE_SHORT = Object.fromEntries(SOURCES.map((s) => [s.key, s.short]));
 
 const DIFFICULTIES = [
   { key: "basico", label: "Básico" },
@@ -33,7 +35,7 @@ const CHECKED_TYPES = new Set(["multi", "fill", "order"]);
 const state = {
   all: [],
   pool: [],                                    // preguntas según filtros activos
-  selectedTracks: new Set(TRACKS.map((t) => t.key)),
+  selectedSources: new Set(SOURCES.map((s) => s.key)),
   selectedTopics: new Set(),
   selectedDifficulties: new Set(DIFFICULTIES.map((d) => d.key)),
   availableTopics: [],                          // claves presentes en el banco
@@ -184,12 +186,12 @@ document.addEventListener("keydown", (e) => {
 });
 
 function buildControls() {
-  const tracks = makeDropdown({
-    label: "Enfoque",
-    items: TRACKS.map((t) => ({ value: t.key, label: t.label })),
-    selected: state.selectedTracks,
-    allLabel: "Todos",
-    summarize: (n) => `${n} enfoques`,
+  const sources = makeDropdown({
+    label: "Fuente",
+    items: SOURCES.map((s) => ({ value: s.key, label: s.label })),
+    selected: state.selectedSources,
+    allLabel: "Todas",
+    summarize: (n) => `${n} fuentes`,
     onChange: () => {
       applyFilters();
       newQuestion();
@@ -230,7 +232,7 @@ function buildControls() {
   themeBtn.addEventListener("click", toggleTheme);
   el.themeToggle = themeBtn;
 
-  el.controls.append(tracks, topics, difficulty, themeBtn);
+  el.controls.append(sources, topics, difficulty, themeBtn);
   updateThemeButton();
 }
 
@@ -257,7 +259,7 @@ function toggleTheme() {
 function applyFilters() {
   state.pool = state.all.filter(
     (q) =>
-      state.selectedTracks.has(q.track) &&
+      state.selectedSources.has(q.source) &&
       state.selectedTopics.has(q.topic) &&
       state.selectedDifficulties.has(q.difficulty)
   );
@@ -311,7 +313,7 @@ function renderQuestion() {
   el.qbadge.style.setProperty("--badge", meta.color);
   el.qbadge.innerHTML =
     `<span class="badge-icon"></span> ${meta.label}` +
-    `<span class="badge-track">${TRACK_LABELS[q.track] || q.track}</span>` +
+    `<span class="badge-track">${SOURCE_SHORT[q.source] || q.source}</span>` +
     `<span class="badge-diff">${DIFF_LABELS[q.difficulty] || q.difficulty}</span>`;
 
   const hint =
