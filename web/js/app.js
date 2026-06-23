@@ -37,7 +37,7 @@ const state = {
   selectedTopics: new Set(),
   selectedDifficulties: new Set(DIFFICULTIES.map((d) => d.key)),
   availableTopics: [],                          // claves presentes en el banco
-  recent: [],                                   // ids recientes (evita repetir)
+  seen: new Set(),                              // ids ya mostrados en el ciclo (no se repiten)
   current: null,
   answered: false,
   score: 0,
@@ -268,14 +268,19 @@ function newQuestion() {
     renderError("No hay preguntas con esta combinación. Activa más enfoques, temas o niveles.");
     return;
   }
-  // Evita repetir las últimas vistas (hasta la mitad del pool).
-  const avoid = new Set(state.recent.slice(-Math.floor(state.pool.length / 2)));
-  let candidates = state.pool.filter((q) => !avoid.has(q.id));
-  if (candidates.length === 0) candidates = state.pool;
+  // No repetir ninguna ya vista en este ciclo: elige solo entre las pendientes.
+  let candidates = state.pool.filter((q) => !state.seen.has(q.id));
+  if (candidates.length === 0) {
+    // Ciclo agotado (ya se vieron todas las del filtro): reinicia evitando
+    // que la primera del nuevo ciclo sea, de inmediato, la última mostrada.
+    state.seen.clear();
+    const lastId = state.current && state.current.id;
+    candidates = state.pool.filter((q) => q.id !== lastId);
+    if (candidates.length === 0) candidates = state.pool;
+  }
 
   const q = pick(candidates);
-  state.recent.push(q.id);
-  if (state.recent.length > 80) state.recent.shift();
+  state.seen.add(q.id);
 
   state.current = {
     ...q,
